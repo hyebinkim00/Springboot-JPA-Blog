@@ -1,11 +1,18 @@
 package com.cos.blog.test;
 
+import java.util.List;
 import java.util.function.Supplier;
 
+import javax.transaction.Transactional;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cos.blog.model.RoleType;
@@ -33,8 +40,11 @@ public class DummyControllerTest {
 		return  user;
 	}
 	
-	
-	
+	@GetMapping("/dummy/users")
+	public List<User>list(){
+		return userRepository.findAll();
+	}
+		
 	@PostMapping("/dummy/join")
 		public String join(User user) {
 			System.out.println("username :  "+user.getUsername());  
@@ -46,4 +56,42 @@ public class DummyControllerTest {
 			
 			return "회원가입 완료";
 		}
+	
+	
+		@Transactional //함수 종료시 자동 commit
+		@PutMapping("/dummy/user/{id}")
+		public User updaeteUser(@PathVariable int id,@RequestBody User requestUser) {
+			System.out.println("id : "+ id);
+			System.out.println("passwd : "+requestUser.getPassword());
+			System.out.println("emil : "+requestUser.getEmail());
+			
+			User user = userRepository.findById(id).orElseThrow(()->{
+				return new IllegalArgumentException("수정 실패") ;
+			});
+			
+			user.setPassword(requestUser.getPassword());
+			user.setEmail(requestUser.getEmail());
+			
+			/* userRepository.save(user); */
+			
+			return user;
+		}
+		
+			@DeleteMapping("/dummy/user/{id}")
+			public String delete(@PathVariable int id) {
+				try {
+				userRepository.deleteById(id);
+				}catch(EmptyResultDataAccessException  e){
+					return "삭제에 실패하였습니다. 해당 id는 DB에 없습니다.";
+				}
+				return "삭제되었습니다.";
+			}
+	
+	
+	
+	
+	
+	
+	
+	
 }
